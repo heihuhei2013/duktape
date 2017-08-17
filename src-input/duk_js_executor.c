@@ -689,7 +689,7 @@ DUK_LOCAL DUK__INLINE_PERF void duk__prepost_incdec_reg_helper(duk_hthread *thr,
 	DUK_TVAL_SET_NUMBER_UPDREF(thr, tv_dst, z);  /* side effects */
 }
 
-DUK_LOCAL DUK__INLINE_PERF void duk__prepost_incdec_var_helper(duk_hthread *thr, duk_small_uint_t idx_dst, duk_tval *tv_id, duk_small_uint_t op, duk_uint_t is_strict) {
+DUK_LOCAL DUK__INLINE_PERF void duk__prepost_incdec_var_helper(duk_hthread *thr, duk_small_uint_t idx_dst, duk_tval *tv_id, duk_small_uint_t op, duk_small_uint_t is_strict) {
 	duk_activation *act;
 	duk_double_t x, y;
 	duk_hstring *name;
@@ -746,7 +746,7 @@ DUK_LOCAL DUK__INLINE_PERF void duk__prepost_incdec_var_helper(duk_hthread *thr,
 #if defined(DUK_USE_EXEC_PREFER_SIZE)
 	duk_replace(thr, (duk_idx_t) idx_dst);
 #else  /* DUK_USE_EXEC_PREFER_SIZE */
-	DUK__REPLACE_TO_TVPTR(thr, DUK_GET_TVAL_POSIDX(thr, idx_dst));
+	DUK__REPLACE_TO_TVPTR(thr, DUK_GET_TVAL_POSIDX(thr, (duk_idx_t) idx_dst));
 #endif  /* DUK_USE_EXEC_PREFER_SIZE */
 }
 
@@ -1188,7 +1188,7 @@ DUK_LOCAL duk_small_uint_t duk__handle_longjmp(duk_hthread *thr, duk_activation 
 		} else {
 			/* Initial resume call. */
 			duk_small_uint_t call_flags;
-			duk_bool_t setup_rc;
+			duk_int_t setup_rc;
 
 			/* resumee: [... initial_func]  (currently actually: [initial_func]) */
 
@@ -1791,7 +1791,8 @@ DUK_LOCAL void duk__interrupt_handle_debugger(duk_hthread *thr, duk_bool_t *out_
 	}
 
 	/* XXX: remove heap->dbg_exec_counter, use heap->inst_count_interrupt instead? */
-	thr->heap->dbg_exec_counter += thr->interrupt_init;
+	DUK_ASSERT(thr->interrupt_init >= 0);
+	thr->heap->dbg_exec_counter += (duk_uint_t) thr->interrupt_init;
 	if (thr->heap->dbg_exec_counter - thr->heap->dbg_last_counter >= DUK_HEAP_DBG_RATELIMIT_OPCODES) {
 		/* Overflow of the execution counter is fine and doesn't break
 		 * anything here.
@@ -2515,7 +2516,7 @@ DUK_LOCAL DUK__NOINLINE_PERF duk_small_uint_t duk__handle_op_endfin(duk_hthread 
 		                     "dismantle catcher, re-throw error",
 		                     (long) cont_type));
 
-		duk_err_setup_ljstate1(thr, (duk_small_int_t) cont_type, tv1);
+		duk_err_setup_ljstate1(thr, (duk_small_uint_t) cont_type, tv1);
 		/* No debugger Throw notify check on purpose (rethrow). */
 
 		DUK_ASSERT(thr->heap->lj.jmpbuf_ptr != NULL);  /* always in executor */
@@ -2615,7 +2616,7 @@ DUK_LOCAL duk_bool_t duk__executor_handle_call(duk_hthread *thr, duk_idx_t idx, 
 	 * target is (directly or indirectly) Reflect.construct(),
 	 * the call may change into a constructor call on the fly.
 	 */
-	rc = duk_handle_call_unprotected(thr, idx, call_flags);
+	rc = (duk_bool_t) duk_handle_call_unprotected(thr, idx, call_flags);
 	if (rc != 0) {
 		/* Ecma-to-ecma call possible, may or may not
 		 * be a tail call.  Avoid C recursion by
@@ -2667,7 +2668,9 @@ DUK_LOCAL duk_bool_t duk__executor_handle_call(duk_hthread *thr, duk_idx_t idx, 
 #else
 #define DUK__FUN()          ((duk_hcompfunc *) DUK_ACT_GET_FUNC((thr)->callstack_curr))
 #endif
-#define DUK__STRICT()       (DUK_HOBJECT_HAS_STRICT((duk_hobject *) DUK__FUN()))
+
+/* Strict flag. */
+#define DUK__STRICT()       ((duk_small_uint_t) DUK_HOBJECT_HAS_STRICT((duk_hobject *) DUK__FUN()))
 
 /* Reg/const access macros: these are very footprint and performance sensitive
  * so modify with care.  Arguments are sometimes evaluated multiple times which

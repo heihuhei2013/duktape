@@ -142,7 +142,7 @@ DUK_LOCAL duk_ret_t duk__error_getter_helper(duk_hthread *thr, duk_small_int_t o
 		for (i = 0; ; i += 2) {
 			duk_int_t pc;
 			duk_int_t line;
-			duk_int_t flags;
+			duk_uint_t flags;
 			duk_double_t d;
 			const char *funcname;
 			const char *filename;
@@ -150,11 +150,11 @@ DUK_LOCAL duk_ret_t duk__error_getter_helper(duk_hthread *thr, duk_small_int_t o
 			duk_hstring *h_name;
 
 			duk_require_stack(thr, 5);
-			duk_get_prop_index(thr, idx_td, i);
-			duk_get_prop_index(thr, idx_td, i + 1);
+			duk_get_prop_index(thr, idx_td, (duk_uarridx_t) i);
+			duk_get_prop_index(thr, idx_td, (duk_uarridx_t) (i + 1));
 			d = duk_to_number_m1(thr);
 			pc = (duk_int_t) DUK_FMOD(d, DUK_DOUBLE_2TO32);
-			flags = (duk_int_t) DUK_FLOOR(d / DUK_DOUBLE_2TO32);
+			flags = (duk_uint_t) DUK_FLOOR(d / DUK_DOUBLE_2TO32);
 			t = (duk_small_int_t) duk_get_type(thr, -2);
 
 			if (t == DUK_TYPE_OBJECT || t == DUK_TYPE_LIGHTFUNC) {
@@ -359,7 +359,7 @@ DUK_LOCAL duk_ret_t duk__error_setter_helper(duk_hthread *thr, duk_small_uint_t 
 	DUK_ASSERT_TOP(thr, 1);  /* fixed arg count: value */
 
 	duk_push_this(thr);
-	duk_push_hstring_stridx(thr, (duk_small_int_t) stridx_key);
+	duk_push_hstring_stridx(thr, stridx_key);
 	duk_dup_0(thr);
 
 	/* [ ... obj key value ] */

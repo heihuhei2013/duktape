@@ -423,7 +423,7 @@ static duk_uint8_t *duk__load_func(duk_hthread *thr, duk_uint8_t *p, duk_uint8_t
 	 * inner functions being loaded.  Require enough space to handle
 	 * large functions correctly.
 	 */
-	duk_require_stack(thr, 2 + count_const + count_funcs);
+	duk_require_stack(thr, (duk_idx_t) (2 + count_const + count_funcs));
 	idx_base = duk_get_top(thr);
 
 	/* Push function object, init flags etc.  This must match

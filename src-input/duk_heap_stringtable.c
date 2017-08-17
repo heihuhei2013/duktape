@@ -766,8 +766,8 @@ DUK_INTERNAL duk_hstring *duk_heap_strtable_intern(duk_heap *heap, const duk_uin
  */
 
 DUK_INTERNAL duk_hstring *duk_heap_strtable_intern_u32(duk_heap *heap, duk_uint32_t val) {
-	char buf[DUK__STRTAB_U32_MAX_STRLEN];
-	char *p;
+	duk_uint8_t buf[DUK__STRTAB_U32_MAX_STRLEN];
+	duk_uint8_t *p;
 
 	DUK_ASSERT(heap != NULL);
 
